@@ -1,0 +1,19 @@
+{
+    "description": "Simple collaborative editor over WebSocket",
+    "type": "example",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Rio Astamal",
+            "email": "rio@rioastamal.net"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "MyApp\\": "src"
+        }
+    },
+    "require": {
+        "cboden/ratchet": "^0.4.1"
+    }
+}

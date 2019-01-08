@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+<title>Collaborative Editor Over WebSocket</title>
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+html {
+    height: 100%;
+}
+* {
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Georgia", "Arial", "Serif";
+    width: 100%;
+    position: relative;
+    min-height: 100%;
+    box-sizing: border-box;
+    height: 100%;
+    background-color: #222;
+    color: #999;
+}
+a, a:hover {
+    color: inherit;
+    text-decoration: none;
+}
+a.button {
+    padding: 0.5em 1em;
+    background-color: #333;
+    margin-left: 2em;
+}
+h2.title {
+    display: block;
+    width: 100%;
+    padding: 0.5em 0.5em 0.5em 1em;
+    background-color: #333;
+    font-size: 1.5em;
+    font-weight: normal;
+    box-sizing: border-box;
+}
+.editor, .preview {
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+.editor {
+    padding-bottom: 4em;
+}
+.editor textarea#editor {
+    height: 100%;
+    width: 100%;
+    padding: 0.5em;
+    box-sizing: border-box;
+    font-size: 1.1em;
+    color: inherit;
+    background-color: inherit;
+    font-family: monospace;
+    border: none;
+}
+.preview #preview {
+    height: 100%;
+    width: 100%;
+    border: none;
+}
+@media screen and (min-width: 720px) {
+    .editor {
+        width: 50%;
+        float: left;
+        padding-bottom: 0;
+    }
+    .preview {
+        width: 50%;
+        float: left;
+    }
+}
+</style>
+</head>
+<body>
+<div class="editor">
+    <h2 class="title">Editor</h2>
+    <textarea id="editor"></textarea>
+</div>
+<div class="preview">
+    <h2 class="title">Preview</h2>
+    <iframe id="preview"></iframe>
+</div>
+</body>
+<script>
+var lastCursorPosition = 0;
+var editor = document.getElementById('editor');
+var preview = document.getElementById('preview');
+var timeoutTyping = null;
+var hostname = window.location.hostname;
+var port = 9191;
+var ws = new WebSocket('ws://' + hostname + ':' + port);
+
+function updatePreview(content)
+{
+    preview.contentWindow.document.open();
+    preview.contentWindow.document.write(content);
+    preview.contentWindow.document.close();
+}
+ws.addEventListener('message', function(e) {
+    editor.value = e.data;
+    editor.setSelectionRange(lastCursorPosition, lastCursorPosition)
+    updatePreview(e.data);
+});
+editor.onkeyup = function(e) {
+    clearTimeout(timeoutTyping);
+
+    timeoutTyping = setTimeout(function() {
+        lastCursorPosition = editor.selectionEnd;
+        ws.send(editor.value);
+    }, 800);
+}
+</script>
+</html>
