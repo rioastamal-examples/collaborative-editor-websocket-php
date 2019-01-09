@@ -39,7 +39,7 @@ class EditorServer implements MessageComponentInterface
     public function onMessage(ConnectionInterface $from, $message)
     {
         $this->writeEditorContent($from, $message);
-        $this->broadcastContent();
+        $this->broadcastContent($from);
     }
 
     public function onClose(ConnectionInterface $conn)
@@ -88,11 +88,17 @@ class EditorServer implements MessageComponentInterface
         return file_get_contents($this->tmpFile);
     }
 
-    protected function broadcastContent()
+    protected function broadcastContent(ConnectionInterface $from)
     {
         $content = $this->readEditorContent();
+        $contentLog = preg_replace('#\r?\n#', '\n', $content);
 
-        foreach ($this->clients as $client) {
+        foreach ($this->clients as $id => $client) {
+            if ((string)$id === (string)$from->resourceId) {
+                continue;
+            }
+
+            $this->debug('Broadcast message to ' . $from->resourceId . ' -> Message: ' . $contentLog);
             $client['conn']->send($content);
         }
     }
