@@ -106,7 +106,7 @@ function updatePreview(content)
     preview.contentWindow.document.write(content);
     preview.contentWindow.document.close();
 }
-ws.addEventListener('message', function(e) {
+ws.onmessage = function(e) {
     if (isTyping) {
         dataHasComeWhileYouTyping = true;
         remoteContent = e.data;
@@ -117,7 +117,7 @@ ws.addEventListener('message', function(e) {
     remoteContent = e.data;
     editor.setSelectionRange(lastCursorPosition, lastCursorPosition)
     updatePreview(e.data);
-});
+};
 editor.onkeyup = function(e) {
     isTyping = true;
     clearTimeout(timeoutTyping);
@@ -127,13 +127,12 @@ editor.onkeyup = function(e) {
         isTyping = false;
 
         if (dataHasComeWhileYouTyping) {
-            console.log("Remote -> " + remoteContent);
             editor.value = remoteContent;
             dataHasComeWhileYouTyping = false;
         }
         updatePreview(editor.value);
         ws.send(editor.value);
     }, 800);
-}
+};
 </script>
 </html>
