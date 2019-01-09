@@ -63,6 +63,7 @@ h2.title {
     height: 100%;
     width: 100%;
     border: none;
+    background-color: #fff;
 }
 @media screen and (min-width: 720px) {
     .editor {
@@ -95,6 +96,9 @@ var timeoutTyping = null;
 var hostname = window.location.hostname;
 var port = 9191;
 var ws = new WebSocket('ws://' + hostname + ':' + port);
+var remoteContent = '';
+var isTyping = false;
+var dataHasComeWhileYouTyping = false;
 
 function updatePreview(content)
 {
@@ -103,15 +107,31 @@ function updatePreview(content)
     preview.contentWindow.document.close();
 }
 ws.addEventListener('message', function(e) {
+    if (isTyping) {
+        dataHasComeWhileYouTyping = true;
+        remoteContent = e.data;
+        return;
+    }
+
     editor.value = e.data;
+    remoteContent = e.data;
     editor.setSelectionRange(lastCursorPosition, lastCursorPosition)
     updatePreview(e.data);
 });
 editor.onkeyup = function(e) {
+    isTyping = true;
     clearTimeout(timeoutTyping);
 
     timeoutTyping = setTimeout(function() {
         lastCursorPosition = editor.selectionEnd;
+        isTyping = false;
+
+        if (dataHasComeWhileYouTyping) {
+            console.log("Remote -> " + remoteContent);
+            editor.value = remoteContent;
+            dataHasComeWhileYouTyping = false;
+        }
+        updatePreview(editor.value);
         ws.send(editor.value);
     }, 800);
 }
